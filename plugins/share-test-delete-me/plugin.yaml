@@ -1,0 +1,4 @@
+author: cullen-b
+# A test plugin used to check sharing works; it gets closed, not merged.
+description: Test plugin for Valerie's share flow (ignore; this pull request gets closed).
+matches: ["example.com"]
