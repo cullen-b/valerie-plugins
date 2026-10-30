@@ -1,0 +1,7 @@
+# YouTube theater mode: opens watch pages in theater mode, including when you move on to the next video.
+author: cullen-b
+description: Opens YouTube watch pages in theater mode, including when you move on to the next video.
+enabled: true
+
+# Sites this runs on. The script only acts on watch pages.
+matches: ["youtube.com"]
