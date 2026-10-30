@@ -1,10 +1,10 @@
 name: Plugins
-# Pull requests: check the plugins (and show the reviewer anything they'd run). Main: rebuild index.json.
+# Pull requests: check the plugins and extensions (and show the reviewer anything they'd run or reach). Main: rebuild index.json.
 on:
   pull_request:
   push:
     branches: [main]
-    paths: ["plugins/**", "scripts/**", ".github/workflows/index.yml"]
+    paths: ["plugins/**", "extensions/**", "scripts/**", ".github/workflows/index.yml"]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - run: pip install pyyaml
-      - name: Check plugins
+      - name: Check plugins and extensions
         if: github.event_name == 'pull_request'
         run: python3 scripts/build_index.py --check
       - name: Rebuild index.json
