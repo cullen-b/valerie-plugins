@@ -17,21 +17,45 @@
       "files": [
         {
           "path": "plugin.yaml",
-          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/d5cf63407c950759d17b0a6d3f47b7f1e274bc9b/plugins/youtube-speed/plugin.yaml",
+          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/fdab23f1831c52726b396bb1897db127ef49a695/plugins/youtube-speed/plugin.yaml",
           "sha256": "81ebada40bf5c5cf82e0178eee31e6d1779c5717d5d5bef9073645e38d0b7e6b"
         },
         {
           "path": "script.js",
-          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/d5cf63407c950759d17b0a6d3f47b7f1e274bc9b/plugins/youtube-speed/script.js",
+          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/fdab23f1831c52726b396bb1897db127ef49a695/plugins/youtube-speed/script.js",
           "sha256": "f8b620d84e94da7eec7678cf000083372aec8f87e15bc729c7e6d3da2a821f72"
         },
         {
           "path": "style.css",
-          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/d5cf63407c950759d17b0a6d3f47b7f1e274bc9b/plugins/youtube-speed/style.css",
+          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/fdab23f1831c52726b396bb1897db127ef49a695/plugins/youtube-speed/style.css",
           "sha256": "2ee710a7eba5ac2fecb97a2f1f95c56fc50b4aae3af7522e982d2816d9683da0"
         }
       ],
       "updated": "2026-10-17"
+    },
+    {
+      "name": "youtube-theater-mode",
+      "description": "Opens YouTube watch pages in theater mode, including when you move on to the next video.",
+      "author": "cullen-b",
+      "matches": [
+        "youtube.com"
+      ],
+      "commands": [],
+      "programs": [],
+      "files": [
+        {
+          "path": "plugin.yaml",
+          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/fdab23f1831c52726b396bb1897db127ef49a695/plugins/youtube-theater-mode/plugin.yaml",
+          "sha256": "80059fe83172b9dc8d045ef57b4f564b4565ec69f5c16787e6e2371ad6c9c5e2"
+        },
+        {
+          "path": "script.js",
+          "url": "https://raw.githubusercontent.com/cullen-b/valerie-plugins/fdab23f1831c52726b396bb1897db127ef49a695/plugins/youtube-theater-mode/script.js",
+          "sha256": "14eaa7d0794b445d0be244835da6ad49843c6befb0afa444022376ca4d618f3b"
+        }
+      ],
+      "updated": "2026-10-30"
     }
-  ]
+  ],
+  "extensions": []
 }
