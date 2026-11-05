@@ -1,0 +1,12 @@
+author: cullen-b
+# Hard refresh: clears this site's cookies, cache and storage, then reloads the page.
+# Valerie asks before clearing, since it signs you out of the site. Disable with enabled: false.
+description: CmdOrCtrl+Shift+R clears the current site's cookies, cache and storage, then reloads it.
+enabled: true
+
+commands:
+  - title: "Hard Refresh: clear this site's data and reload"
+    key: "CmdOrCtrl+Shift+R"
+    actions:
+      - { cmd: clear_site_data }
+      - { cmd: reload }
