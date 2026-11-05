@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
-    paths: ["plugins/**", "extensions/**", "scripts/**", ".github/workflows/index.yml"]
+    paths: ["plugins/**", "extensions/**", "layouts/**", "scripts/**", ".github/workflows/index.yml"]
   workflow_dispatch:
 
 permissions:

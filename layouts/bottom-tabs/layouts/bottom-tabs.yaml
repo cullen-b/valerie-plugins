@@ -1,0 +1,10 @@
+title: Bottom Tabs
+description: Your tabs along the bottom of the window, with nothing else in the way.
+settings:
+  layout: { corner_radius: 0 }
+window:
+  column:
+    - part: pages
+    - panel: window-panels/tab-strip
+      id: tabs
+      size: 40

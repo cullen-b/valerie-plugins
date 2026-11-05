@@ -1,6 +1,6 @@
 # Valerie plugins
 
-Plugins and browser extensions people made for [Valerie](https://github.com/cullen-b/valerie), the browser you change
+Plugins, panels, layouts and browser extensions people made for [Valerie](https://github.com/cullen-b/valerie), the browser you change
 by asking.
 
 **Install one:** type **Plugins** in Valerie's command bar to browse, search and install. Or from Terminal:
@@ -19,7 +19,12 @@ Each folder in `extensions/` is one browser extension, exactly as it sits in Val
 web extension with a `manifest.json` (as for Safari or Chrome "load unpacked"). They need macOS 15.4 or later, and
 Valerie asks before loading each one. Plugins work everywhere Valerie does, so prefer a plugin when either would do.
 
-`index.json` is built from both on every merge, with every file pinned to that commit and checksummed, so what you
+Each folder in `layouts/` is a whole window: a plugin with `layouts/<folder name>.yaml`, the panels it uses as `.html`
+files, and if you like a `preview.svg` for the gallery (under 60 KB; without one the gallery draws its blocks). It installs
+into Valerie's `plugins/` folder like any plugin, so its name can't match a plugin's. A panel is an HTML file in a plugin;
+a plugin with panels shows under "Panels". Browse them in the "Layouts" and "Panels" tabs of Valerie's "Plugins" window.
+
+`index.json` is built from all of these on every merge, with every file pinned to that commit and checksummed, so what you
 install is exactly what was reviewed.
 
 ## Rules for plugins
@@ -31,4 +36,7 @@ install is exactly what was reviewed.
 - Anything that runs programs on someone's computer (`run:` in a command or `on_page_load`) is shown to them before
   they install it, and gets a closer look in review. So do extensions that reach every site or ask for permissions
   like `nativeMessaging`, `cookies` or `webRequest`.
+- Layouts only change how the window looks (`settings` sections `layout`, `sidebar`, `window`, `command_bar`, `start_page`,
+  `toast_seconds`). A layout that uses `replace` draws one of Valerie's own windows, with everything that window can do
+  (a terminal can run any program): Valerie asks people first, and it gets a closer look in review.
 - Check the list first: if a plugin already does it, improve that one instead of adding another.
