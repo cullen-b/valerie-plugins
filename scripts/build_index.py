@@ -20,7 +20,7 @@ LOOK_SECTIONS = {"layout", "sidebar", "window", "command_bar", "context_menu", "
 KEY_COMMANDS = {"toggle_block", "select_block", "resize_block", "panel_command", "open_panel", "close_panel", "switch_layout", "next_layout", "toggle_sidebar",
                 "toggle_terminal", "open_command_bar", "new_tab", "next_tab", "prev_tab", "back", "forward", "reload", "close_tab"}
 WINDOWS = {"sidebar", "command_bar", "chats", "terminal", "little_window", "answer", "welcome", "plugins"}
-PARTS = {"pages", "sidebar", "top_bar", "terminal"}
+PARTS = {"pages", "sidebar", "top_bar", "terminal", "chats"}
 PREVIEW_LIMIT = 60_000
 
 def author_of(path):
