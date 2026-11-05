@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-"""Check every plugin and browser extension and write index.json, the list Valerie installs from.
+"""Check every plugin, browser extension and layout and write index.json, the list Valerie installs from.
 
 Plugins are folders in plugins/ (a plugin.yaml), extensions are folders in extensions/ (an unpacked web extension's
-manifest.json). Each file is pinned to the commit it was indexed at (and its sha256), so what Valerie downloads is
+manifest.json), layouts are folders in layouts/ (a plugin that also has layouts/<folder name>.yaml and the panels it uses). Each file is pinned to the commit it was indexed at (and its sha256), so what Valerie downloads is
 exactly what was reviewed. `--check` only validates (for pull requests) and prints what each one can run or reach,
 for the reviewer.
 """
-import hashlib, json, os, re, subprocess, sys
+import base64, hashlib, json, os, re, subprocess, sys
 import yaml
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "cullen-b/valerie-plugins")
 SHA = os.environ.get("GITHUB_SHA") or subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,59}$")
-MANIFEST_KEYS = {"description", "enabled", "matches", "commands", "on_page_load", "settings", "author"}
+MANIFEST_KEYS = {"description", "author", "enabled", "matches", "commands", "on_page_load", "settings", "run_at", "all_frames",
+                 "rerun_when_url_changes", "permissions", "events", "search", "sidebar", "spaces"}
+# What a layout may contain: keep these in step with src/window_layout.rs in Valerie.
+LAYOUT_KEYS = {"title", "description", "settings", "css", "window", "floating", "replace"}
+LOOK_SECTIONS = {"layout", "sidebar", "window", "command_bar", "start_page", "toast_seconds"}
+WINDOWS = {"sidebar", "command_bar", "chats", "terminal", "little_window", "answer", "welcome", "plugins"}
+PARTS = {"pages", "sidebar", "top_bar", "terminal"}
+PREVIEW_LIMIT = 60_000
 
 def author_of(path):
     """The GitHub login of whoever first added the plugin (from a noreply address), else their name."""
@@ -105,18 +112,92 @@ def check(name, folder):
     files = files_of("plugins", name, folder, problems)
     programs = [c["run"] for c in m.get("commands") or [] if isinstance(c, dict) and c.get("run")]
     programs += [h["run"] for h in m.get("on_page_load") or [] if isinstance(h, dict) and h.get("run")]
+    programs += [h["run"] for h in m.get("events") or [] if isinstance(h, dict) and h.get("run")]
+    programs += [h["run"] for h in m.get("search") or [] if isinstance(h, dict) and h.get("run")]
+    programs += [h["text_from"] for h in m.get("sidebar") or [] if isinstance(h, dict) and h.get("text_from")]
     entry = {
         "name": name, "description": str(m.get("description", "")).strip(), "author": str(m.get("author") or author_of(folder)),
         "matches": [str(x) for x in m.get("matches") or []],
         "commands": [str(c.get("title", "")) for c in m.get("commands") or [] if isinstance(c, dict)],
-        "programs": programs, "files": files, "updated": updated(folder),
+        "programs": programs, "permissions": [str(x) for x in m.get("permissions") or []], "files": files, "updated": updated(folder),
+        # Its panels: the HTML files a layout can place (start.html is the start page).
+        "panels": sorted(f["path"][:-5] for f in files if "/" not in f["path"] and f["path"].endswith(".html") and f["path"] != "start.html"),
     }
+    return entry, problems
+
+def walk_tree(node, found, problems):
+    """Every part and panel in a layout's tree."""
+    if not isinstance(node, dict):
+        problems.append("window: each block must be a mapping")
+        return
+    what = [k for k in ("row", "column", "part", "panel") if k in node]
+    if len(what) != 1:
+        problems.append(f"window: each block needs exactly one of row, column, part or panel, not {what}")
+        return
+    if what[0] in ("row", "column"):
+        for child in node[what[0]] or []:
+            walk_tree(child, found, problems)
+    else:
+        found[what[0]].append(str(node[what[0]]))
+
+def check_layout(name, folder):
+    entry, problems = check(name, folder)
+    if not entry:
+        return entry, problems
+    path = os.path.join(folder, "layouts", name + ".yaml")
+    if not os.path.exists(path):
+        return entry, problems + [f"no layouts/{name}.yaml"]
+    try:
+        l = yaml.safe_load(open(path)) or {}
+    except Exception as e:
+        return entry, problems + [f"layouts/{name}.yaml doesn't parse: {e}"]
+    if not isinstance(l, dict):
+        return entry, problems + [f"layouts/{name}.yaml must be a mapping"]
+    unknown = set(l) - LAYOUT_KEYS
+    if unknown:
+        problems.append(f"unknown keys in the layout: {', '.join(sorted(unknown))}")
+    extra = set(l.get("settings") or {}) - LOOK_SECTIONS
+    if extra:
+        problems.append(f"a layout can only change how the window looks, not {', '.join(sorted(extra))}")
+    found = {"part": [], "panel": []}
+    if l.get("window") is not None:
+        walk_tree(l["window"], found, problems)
+        if found["part"].count("pages") != 1:
+            problems.append("window: it needs exactly one `part: pages` block")
+        problems += [f"window: part {p!r} isn't one of {sorted(PARTS)}" for p in found["part"] if p not in PARTS]
+    replaces = l.get("replace") or {}
+    problems += [f"replace: {w!r} isn't one of {sorted(WINDOWS)}" for w in replaces if w not in WINDOWS]
+    used = found["panel"] + [str(f.get("panel")) for f in l.get("floating") or [] if isinstance(f, dict)] + [str(v) for v in replaces.values()]
+    # A layout stands on its own: its panels are its own files, or Valerie's window-panels, which everyone has.
+    for panel in used:
+        plugin, _, file = panel.partition("/")
+        file = file or "panel"
+        if plugin == "window-panels":
+            continue
+        if plugin != name:
+            problems.append(f"panel {panel}: bring it in this folder ({name}/{file})")
+        elif not os.path.exists(os.path.join(folder, file + ".html")):
+            problems.append(f"panel {panel}: no {file}.html")
+    if replaces:
+        print(f"::warning::layout {name} replaces Valerie's own windows ({', '.join(sorted(replaces))}), with all they can do; review it closely")
+    preview = os.path.join(folder, "preview.svg")
+    if os.path.exists(preview):
+        data = open(preview, "rb").read()
+        if len(data) > PREVIEW_LIMIT:
+            problems.append(f"preview.svg is over {PREVIEW_LIMIT // 1000} KB")
+        entry["preview"] = "data:image/svg+xml;base64," + base64.b64encode(data).decode()
+    entry["tree"], entry["floating"], entry["replaces"] = l.get("window"), l.get("floating") or [], sorted(replaces)
     return entry, problems
 
 def main():
     only_check = "--check" in sys.argv
-    out, failed = {"plugins": [], "extensions": []}, False
-    for top, checker in (("plugins", check), ("extensions", check_extension)):
+    out, failed = {"plugins": [], "extensions": [], "layouts": []}, False
+    # Layouts install into the same folder as plugins, so they can't share a name.
+    both = set(os.listdir("plugins") if os.path.isdir("plugins") else []) & set(os.listdir("layouts") if os.path.isdir("layouts") else [])
+    for name in sorted(both):
+        print(f"::error::{name} is both a plugin and a layout; rename one")
+        failed = True
+    for top, checker in (("plugins", check), ("extensions", check_extension), ("layouts", check_layout)):
         for name in sorted(os.listdir(top)) if os.path.isdir(top) else []:
             folder = os.path.join(top, name)
             if not os.path.isdir(folder) or name.startswith("."):
@@ -139,6 +220,6 @@ def main():
         sys.exit(1)
     if not only_check:
         json.dump(out, open("index.json", "w"), indent=2)
-        print(f"index.json: {len(out['plugins'])} plugins, {len(out['extensions'])} extensions")
+        print(f"index.json: {len(out['plugins'])} plugins, {len(out['extensions'])} extensions, {len(out['layouts'])} layouts")
 
 main()
