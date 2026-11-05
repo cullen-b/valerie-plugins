@@ -91,7 +91,7 @@ def check_extension(name, folder):
     # Sites like <all_urls> mean every site: matches stays empty, as for a plugin without `matches`.
     return entry, problems
 
-def check(name, folder):
+def check(name, folder, top="plugins"):
     problems = []
     if not NAME.match(name):
         problems.append("folder name must be lowercase letters, digits and hyphens")
@@ -109,7 +109,7 @@ def check(name, folder):
         problems.append(f"unknown keys in plugin.yaml: {', '.join(sorted(unknown))}")
     if not str(m.get("description", "")).strip():
         problems.append("plugin.yaml needs a one-line description")
-    files = files_of("plugins", name, folder, problems)
+    files = files_of(top, name, folder, problems)
     programs = [c["run"] for c in m.get("commands") or [] if isinstance(c, dict) and c.get("run")]
     programs += [h["run"] for h in m.get("on_page_load") or [] if isinstance(h, dict) and h.get("run")]
     programs += [h["run"] for h in m.get("events") or [] if isinstance(h, dict) and h.get("run")]
@@ -141,7 +141,7 @@ def walk_tree(node, found, problems):
         found[what[0]].append(str(node[what[0]]))
 
 def check_layout(name, folder):
-    entry, problems = check(name, folder)
+    entry, problems = check(name, folder, "layouts")
     if not entry:
         return entry, problems
     path = os.path.join(folder, "layouts", name + ".yaml")
