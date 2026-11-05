@@ -15,8 +15,10 @@ NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,59}$")
 MANIFEST_KEYS = {"description", "author", "enabled", "matches", "commands", "on_page_load", "settings", "run_at", "all_frames",
                  "rerun_when_url_changes", "permissions", "events", "search", "sidebar", "spaces"}
 # What a layout may contain: keep these in step with src/window_layout.rs in Valerie.
-LAYOUT_KEYS = {"title", "description", "settings", "css", "window", "floating", "replace"}
-LOOK_SECTIONS = {"layout", "sidebar", "window", "command_bar", "start_page", "toast_seconds"}
+LAYOUT_KEYS = {"title", "description", "settings", "css", "window", "floating", "replace", "theme", "keys"}
+LOOK_SECTIONS = {"layout", "sidebar", "window", "command_bar", "context_menu", "start_page", "toast_seconds"}
+KEY_COMMANDS = {"toggle_block", "select_block", "resize_block", "panel_command", "open_panel", "close_panel", "switch_layout", "next_layout", "toggle_sidebar",
+                "toggle_terminal", "open_command_bar", "new_tab", "next_tab", "prev_tab", "back", "forward", "reload", "close_tab"}
 WINDOWS = {"sidebar", "command_bar", "chats", "terminal", "little_window", "answer", "welcome", "plugins"}
 PARTS = {"pages", "sidebar", "top_bar", "terminal"}
 PREVIEW_LIMIT = 60_000
@@ -130,13 +132,16 @@ def walk_tree(node, found, problems):
     if not isinstance(node, dict):
         problems.append("window: each block must be a mapping")
         return
-    what = [k for k in ("row", "column", "part", "panel") if k in node]
+    what = [k for k in ("row", "column", "stack", "part", "panel") if k in node]
     if len(what) != 1:
-        problems.append(f"window: each block needs exactly one of row, column, part or panel, not {what}")
+        problems.append(f"window: each block needs exactly one of row, column, stack, part or panel, not {what}")
         return
-    if what[0] in ("row", "column"):
+    if what[0] in ("row", "column", "stack"):
+        before = found["part"].count("pages")
         for child in node[what[0]] or []:
             walk_tree(child, found, problems)
+        if what[0] == "stack" and found["part"].count("pages") != before:
+            problems.append("window: the pages block can't be in a stack")
     else:
         found[what[0]].append(str(node[what[0]]))
 
@@ -165,6 +170,10 @@ def check_layout(name, folder):
         if found["part"].count("pages") != 1:
             problems.append("window: it needs exactly one `part: pages` block")
         problems += [f"window: part {p!r} isn't one of {sorted(PARTS)}" for p in found["part"] if p not in PARTS]
+    for key, command in (l.get("keys") or {}).items():
+        cmd = command if isinstance(command, str) else command.get("cmd") if isinstance(command, dict) else None
+        if cmd not in KEY_COMMANDS:
+            problems.append(f"keys: {key} runs {cmd!r}; a layout's keys can only move around the window")
     replaces = l.get("replace") or {}
     problems += [f"replace: {w!r} isn't one of {sorted(WINDOWS)}" for w in replaces if w not in WINDOWS]
     used = found["panel"] + [str(f.get("panel")) for f in l.get("floating") or [] if isinstance(f, dict)] + [str(v) for v in replaces.values()]
