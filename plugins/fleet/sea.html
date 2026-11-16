@@ -1,0 +1,211 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sea</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body {
+    --sky: #bfe3f2; --sea1: #2f8fc0; --sea2: #1d6e9c; --sea3: #124e75; --foam: #ffffffcc;
+    --hull: #7a4a24; --hull-dark: #4f2f15; --sail: #f6f1e4; --sail-edge: #d9d0b8; --mast: #5b3a1c;
+    --ink: #10283a; --sign: #e9d3a3; --flag: #d8433b;
+    font: 600 11.5px/1.2 ui-rounded, "SF Pro Rounded", system-ui, sans-serif; color: var(--ink);
+    user-select: none; -webkit-user-select: none; cursor: default;
+    background: linear-gradient(var(--sky) 0, var(--sky) 16%, var(--sea1) 17%, var(--sea2) 60%, var(--sea3));
+  }
+  body.dark { --sky: #18213f; --sea1: #15405e; --sea2: #0e3049; --sea3: #08202f; --foam: #b9d6ee88; --sail: #e6e2d4; --sail-edge: #a9a28c; --ink: #f1ecdf; --sign: #5b4a2c; }
+  #sun { position: absolute; right: 130px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #ffe58a; box-shadow: 0 0 14px #ffe58acc; }
+  body.dark #sun { background: #f4eed2; box-shadow: 0 0 12px #f4eed288; }
+  #waves { position: absolute; inset: 0; pointer-events: none; }
+  #sea { position: absolute; inset: 0; }
+  #surf { position: absolute; left: 0; right: 0; top: 16%; height: 6px; background: repeating-radial-gradient(circle at 6px 0, transparent 0 4px, var(--foam) 4.5px 6px, transparent 6.5px 12px); opacity: .6; pointer-events: none; }
+  #spacer { position: absolute; left: 0; top: 0; bottom: 0; width: 0; }
+  body.mac #spacer { width: 80px; }
+
+  .ship { position: absolute; left: 0; top: 0; width: 64px; height: 56px; padding: 0; border: 0; background: none; transform-origin: 32px 46px; will-change: transform; }
+  .ship .bob { position: absolute; inset: 0; animation: bob 3.2s ease-in-out infinite; transform-origin: 32px 46px; }
+  .ship:nth-child(3n) .bob { animation-duration: 2.6s; animation-delay: -.8s; }
+  .ship:nth-child(3n+1) .bob { animation-duration: 3.8s; animation-delay: -1.7s; }
+  .ship svg { position: absolute; left: 0; top: 0; width: 64px; height: 56px; overflow: visible; filter: drop-shadow(0 2px 0 rgba(0,0,0,.15)); }
+  .ship .flip { transform-origin: 32px 28px; transition: transform .35s; }
+  .ship.left .flip { transform: scaleX(-1); }
+  .ship .tag { position: absolute; left: 26px; top: 12px; width: 15px; height: 15px; border-radius: 4px; background: #fff; box-shadow: 0 0 0 1.5px var(--sail-edge); display: grid; place-items: center; overflow: hidden; }
+  .ship .tag img { width: 12px; height: 12px; }
+  .ship .label { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); max-width: 170px; padding: 2px 7px 3px; border-radius: 4px; background: var(--sign); color: #2b1d0c; box-shadow: 0 1px 0 #0003; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .ship:hover .label, .ship.on .label, .ship:focus-visible .label { opacity: 1; }
+  .ship.on { z-index: 5; }
+  .ship:hover { z-index: 6; }
+  .ship .sink { position: absolute; right: 0; top: -2px; width: 18px; height: 18px; border-radius: 50%; border: 0; background: var(--sign); color: #2b1d0c; font: 700 12px/18px system-ui; opacity: 0; transition: opacity .15s; }
+  .ship:hover .sink, .ship .sink:focus-visible { opacity: 1; }
+  .ship .note { position: absolute; left: 46px; top: -6px; font-size: 13px; color: var(--ink); display: none; }
+  .ship.playing .note { display: block; animation: bob 1.2s ease-in-out infinite; }
+  .ship.loading .bob { animation: rock .6s ease-in-out infinite; }
+  .ship .wake { position: absolute; left: 6px; top: 46px; width: 52px; height: 6px; border-radius: 50%; background: var(--foam); opacity: .5; filter: blur(1px); }
+  @keyframes bob { 50% { transform: translateY(-3px) rotate(2.5deg); } }
+  @keyframes rock { 50% { transform: translateY(-4px) rotate(-6deg); } }
+  button:focus-visible, .ship:focus-visible { outline: 2px solid var(--flag); outline-offset: 2px; border-radius: 8px; }
+
+  #port { position: absolute; right: 8px; bottom: 6px; width: 60px; height: 52px; border: 0; padding: 0; background: none; }
+  #port svg { width: 100%; height: 100%; }
+  #port .sign { position: absolute; right: 100%; bottom: 8px; padding: 1px 6px 2px; border-radius: 3px; background: var(--sign); color: #2b1d0c; white-space: nowrap; opacity: 0; transition: opacity .15s; }
+  #port:hover .sign, #port:focus-visible .sign { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .ship .bob, .ship.loading .bob, .ship.playing .note { animation: none; } .ship .flip { transition: none; } }
+</style>
+</head>
+<body>
+<div id="sun"></div>
+<div id="surf"></div>
+<div id="sea"></div>
+<div id="spacer"></div>
+<button id="port" aria-label="Launch a new ship"><span class="sign">Launch ship</span></button>
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  const sea = document.getElementById("sea");
+  const command = (c) => valerie.call("run_command", { command: c });
+  const flat = (nodes) => (nodes || []).flatMap((n) => n.type === "folder" ? flat(n.children) : [n]);
+  const mac = /Mac/.test(navigator.platform);
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  const dark = matchMedia("(prefers-color-scheme: dark)");
+  document.body.classList.toggle("mac", mac);
+  const night = () => document.body.classList.toggle("dark", (valerie.props || {}).night === true || ((valerie.props || {}).night !== false && dark.matches));
+  dark.addEventListener("change", night);
+  night();
+
+  function svg(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (parent) parent.append(e);
+    return e;
+  }
+  // Sailing ship: hull, mast, square sail (favicon sits on it), pennant. Active ship flies a red flag.
+  function drawShip() {
+    const s = svg("svg", { viewBox: "0 0 64 56" });
+    const g = svg("g", { class: "flip" }, s);
+    svg("rect", { x: 31, y: 4, width: 2.5, height: 38, fill: "var(--mast)" }, g);
+    svg("path", { d: "M33.5 6 Q54 12 52 32 L33.5 36 Z", fill: "var(--sail)", stroke: "var(--sail-edge)", "stroke-width": 1 }, g);
+    svg("path", { d: "M31 8 Q12 14 14 32 L31 36 Z", fill: "var(--sail)", stroke: "var(--sail-edge)", "stroke-width": 1 }, g);
+    svg("path", { d: "M6 38 L58 38 Q54 52 42 52 L20 52 Q10 52 6 38 Z", fill: "var(--hull)", stroke: "var(--hull-dark)", "stroke-width": 1.5 }, g);
+    svg("rect", { x: 10, y: 41, width: 44, height: 2, fill: "var(--hull-dark)", opacity: .6 }, g);
+    for (const x of [20, 32, 44]) svg("circle", { cx: x, cy: 46, r: 1.8, fill: "var(--hull-dark)" }, g);
+    svg("path", { d: "M58 38 L64 34 L60 40 Z", fill: "var(--hull-dark)" }, g);
+    const flag = svg("path", { class: "flag", d: "M32 4 L32 -6 L44 -2 Z", fill: "var(--flag)", visibility: "hidden" }, g);
+    return s;
+  }
+
+  const fleet = new Map(); // tab id → { el, x, y, tx, ty, wait, left }
+  let settled = false;
+  const W = () => sea.clientWidth, H = () => sea.clientHeight;
+  const minX = () => (mac ? 84 : 6), maxX = () => Math.max(minX() + 10, W() - 140);
+  const minY = () => Math.max(6, H() * 0.2 - 4), maxY = () => Math.max(minY() + 4, H() - 66);
+  const rand = (a, b) => a + Math.random() * (b - a);
+  function pick(sh) { sh.tx = rand(minX(), maxX()); sh.ty = rand(minY(), maxY()); sh.wait = rand(40, 240); }
+
+  function addShip(t) {
+    const el = document.createElement("div");
+    el.className = "ship";
+    el.tabIndex = 0;
+    el.setAttribute("role", "button");
+    const bob = document.createElement("div");
+    bob.className = "bob";
+    const wake = document.createElement("span");
+    wake.className = "wake";
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    bob.append(drawShip(), tag);
+    const label = document.createElement("span");
+    label.className = "label";
+    const note = document.createElement("span");
+    note.className = "note";
+    note.textContent = "♪";
+    const sink = document.createElement("button");
+    sink.className = "sink";
+    sink.textContent = "×";
+    sink.title = "Sink ship (close tab)";
+    sink.setAttribute("aria-label", "Close tab");
+    el.append(wake, bob, label, note, sink);
+    const entering = settled;
+    const sh = { el, tag, label, favicon: false, x: entering ? W() - 70 : rand(minX(), maxX()), y: entering ? maxY() : rand(minY(), maxY()), left: entering, id: t.id };
+    pick(sh);
+    if (entering) sh.wait = 0;
+    el.addEventListener("click", () => command({ cmd: "activate_tab", tab: sh.id }));
+    el.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); command({ cmd: "activate_tab", tab: sh.id }); } });
+    el.addEventListener("auxclick", (e) => { if (e.button === 1) command({ cmd: "close_tab", tab: sh.id }); });
+    sink.addEventListener("click", (e) => { e.stopPropagation(); command({ cmd: "close_tab", tab: sh.id }); });
+    sea.append(el);
+    fleet.set(t.id, sh);
+    return sh;
+  }
+
+  function draw() {
+    const s = valerie.state;
+    if (!s) return;
+    const pinned = new Set(flat(s.pinned).map((t) => t.id));
+    const tabs = [...flat(s.pinned), ...flat(s.kept), ...(s.today || [])];
+    const ids = new Set(tabs.map((t) => t.id));
+    for (const [id, sh] of fleet) if (!ids.has(id)) { sh.el.remove(); fleet.delete(id); }
+    const crowd = tabs.length > 24 ? .7 : tabs.length > 12 ? .85 : 1;
+    for (const t of tabs) {
+      const sh = fleet.get(t.id) || addShip(t);
+      const name = t.title || t.url || "New tab";
+      sh.label.textContent = name;
+      sh.el.title = name;
+      sh.el.setAttribute("aria-label", name + (t.id === s.active ? " (current tab)" : ""));
+      sh.el.classList.toggle("on", t.id === s.active);
+      sh.el.classList.toggle("loading", !!t.loading);
+      sh.el.classList.toggle("playing", !!t.playing && !t.muted);
+      sh.el.querySelector(".flag").setAttribute("visibility", t.id === s.active ? "visible" : "hidden");
+      sh.scale = (t.id === s.active ? 1.2 : pinned.has(t.id) ? 1.05 : .9) * crowd;
+      if (sh.favicon !== t.favicon) {
+        sh.favicon = t.favicon;
+        if (t.favicon) { const i = document.createElement("img"); i.src = t.favicon; i.alt = ""; i.width = i.height = 12; i.addEventListener("error", () => { sh.tag.style.display = "none"; }, { once: true }); sh.tag.replaceChildren(i); sh.tag.style.display = ""; }
+        else sh.tag.style.display = "none";
+      }
+      place(sh);
+    }
+    settled = true;
+  }
+  function place(sh) {
+    sh.el.classList.toggle("left", sh.left);
+    sh.el.style.transform = `translate(${sh.x.toFixed(1)}px, ${sh.y.toFixed(1)}px) scale(${sh.scale || 1})`;
+    sh.el.style.zIndex = sh.el.classList.contains("on") ? 50 : Math.round(sh.y);
+  }
+  // Sail slowly to a spot, drift a while, sail on. Ships under the pointer hold still so they're easy to click.
+  let last = performance.now();
+  function tick(now) {
+    const dt = Math.min(64, now - last) / 16.7;
+    last = now;
+    if (!still.matches) {
+      for (const sh of fleet.values()) {
+        if (sh.el.matches(":hover, :focus-within")) continue;
+        if (sh.wait > 0) { sh.wait -= dt; continue; }
+        const dx = sh.tx - sh.x, dy = sh.ty - sh.y, d = Math.hypot(dx, dy);
+        if (d < 1.5) { pick(sh); continue; }
+        const step = Math.min(d, 0.35 * dt);
+        sh.x += (dx / d) * step;
+        sh.y += (dy / d) * step;
+        if (Math.abs(dx) > 2) sh.left = dx < 0;
+        place(sh);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  const port = document.getElementById("port");
+  const ps = svg("svg", { viewBox: "0 0 60 52" });
+  svg("path", { d: "M0 52 Q14 34 30 36 Q50 34 60 52 Z", fill: "#d9c27f" }, ps);
+  svg("path", { d: "M24 40 L28 10 L34 10 L38 40 Z", fill: "#f2efe6", stroke: "#c9c3b0", "stroke-width": 1 }, ps);
+  svg("rect", { x: 25.5, y: 22, width: 9, height: 5, fill: "var(--flag)" }, ps);
+  svg("rect", { x: 27, y: 4, width: 6, height: 6, fill: "#ffe58a", stroke: "#a77b12", "stroke-width": 1 }, ps);
+  svg("path", { d: "M26 4 L30 -1 L34 4 Z", fill: "var(--flag)" }, ps);
+  port.prepend(ps);
+  port.addEventListener("click", () => command({ cmd: "new_tab" }));
+  sea.addEventListener("mousedown", (e) => { if (e.button === 0 && e.target === sea) valerie.dragWindow(); });
+
+  valerie.on("state", draw);
+  addEventListener("resize", () => { for (const sh of fleet.values()) { sh.x = Math.min(Math.max(sh.x, minX()), maxX()); sh.y = Math.min(Math.max(sh.y, minY()), maxY()); pick(sh); place(sh); } });
+  draw();
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>
