@@ -1,0 +1,4 @@
+author: cullen-b
+# Panel for the Sea layout: every tab is a ship.
+description: Your tabs as ships sailing a sea. Click a ship to go to it, × sinks it, the lighthouse launches a new one.
+permissions: [run_command]
