@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Valerie plugins</title>
+<meta name="description" content="Panels, layouts and site tweaks people made for Valerie, the browser you change by asking.">
+<meta property="og:title" content="Valerie plugins">
+<meta property="og:description" content="Panels, layouts and site tweaks people made for Valerie, the browser you change by asking.">
+<meta property="og:image" content="https://cullen-b.github.io/valerie/icon.png">
+<meta name="theme-color" content="#171a2b">
+<link rel="icon" href="https://cullen-b.github.io/valerie/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg1: #171a2b; --bg2: #2a1f3d; --ink: #ecebf5; --dim: #a9a7c2; --faint: #6f6c8c;
+  --accent: #9d8cff; --onacc: #14122a; --card: #1f2236; --line: rgba(255,255,255,.09); --warn: #f2c66d;
+  --ease: cubic-bezier(.22,.9,.24,1);
+  --display: "Anybody", "Arial Black", system-ui, sans-serif;
+  --body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg1); }
+body { margin: 0; min-height: 100vh; color: var(--ink); font: 17px/1.55 var(--body); -webkit-font-smoothing: antialiased;
+  background: radial-gradient(120% 70% at 85% -10%, var(--bg2), transparent 60%), var(--bg1); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.wrap { width: min(1180px, 100% - 32px); margin: 0 auto; }
+
+/* top bar */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; }
+.brand img { width: 28px; height: 28px; border-radius: 7px; }
+.top nav { display: flex; gap: 20px; font-size: 15px; color: var(--dim); }
+.top nav a { text-decoration: none; } .top nav a:hover { color: var(--ink); }
+
+/* hero: the word stretches out once, like a window being resized */
+.hero { padding: 48px 0 28px; }
+h1 { margin: 0; font: 900 clamp(44px, calc((100vw - 32px) / 6.4), 180px)/.82 var(--display); font-stretch: 150%; letter-spacing: -.02em;
+  animation: stretch 1.1s var(--ease) both; }
+@keyframes stretch { from { font-stretch: 50%; font-weight: 300; } }
+.lede { max-width: 34em; margin: 26px 0 0; font-size: 20px; color: var(--dim); }
+.lede b { color: var(--ink); font-weight: 600; }
+
+/* search and shelves */
+.bar { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px 0;
+  background: color-mix(in srgb, var(--bg1) 86%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.search { flex: 1 1 260px; position: relative; }
+.search input { width: 100%; height: 46px; padding: 0 16px 0 44px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--card); color: var(--ink); font: inherit; font-size: 16px; }
+.search input::placeholder { color: var(--faint); }
+.search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.search svg { position: absolute; left: 15px; top: 50%; translate: 0 -50%; color: var(--faint); pointer-events: none; }
+.shelves { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); overflow-x: auto; }
+.shelves button { flex: none; height: 36px; padding: 0 14px; border: 0; border-radius: 9px; background: none; color: var(--dim);
+  font: 500 15px var(--body); cursor: pointer; transition: background .15s, color .15s; }
+.shelves button:hover { color: var(--ink); }
+.shelves button[aria-pressed="true"] { background: var(--accent); color: var(--onacc); }
+.shelves .n { margin-left: 6px; font-variant-numeric: tabular-nums; opacity: .7; }
+
+/* the catalogue */
+main { padding: 18px 0 80px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.item { display: flex; flex-direction: column; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--card);
+  color: inherit; font: inherit; text-align: left; cursor: pointer; overflow: hidden; transition: border-color .2s, translate .2s var(--ease); }
+.item:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); translate: 0 -2px; }
+.item:active { translate: 0 0; }
+.shot { position: relative; aspect-ratio: 16 / 9; background: #14131c; border-bottom: 1px solid var(--line); overflow: hidden; }
+.shot > img, .shot > iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
+.shot > img { object-fit: contain; }
+.shot > iframe { pointer-events: none; }
+.meta { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 20px; flex: 1; }
+.kind { font-size: 13px; font-weight: 600; color: var(--accent); }
+.item h2 { margin: 0; font: 750 25px/1.1 var(--display); font-stretch: 112%; }
+.item p { margin: 0; color: var(--dim); font-size: 15.5px; }
+.by { margin-top: auto; padding-top: 10px; font-size: 14px; color: var(--faint); }
+.empty { padding: 60px 0; color: var(--dim); font-size: 18px; }
+.empty button { margin-top: 12px; }
+
+/* drawn previews */
+.browser { position: absolute; inset: 14px 14px 0; display: flex; flex-direction: column; border-radius: 10px 10px 0 0; background: #23213a; overflow: hidden; }
+.browser .url { display: flex; align-items: center; gap: 8px; margin: 10px; padding: 7px 12px; border-radius: 8px; background: #14131c; font-size: 14px; color: var(--ink); }
+.browser .url::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #6fd49b; }
+.browser .page { flex: 1; margin: 0 10px; border-radius: 6px 6px 0 0; background: repeating-linear-gradient(#2e2b4a 0 10px, transparent 10px 22px) 16px 18px / 60% 100% no-repeat, #1c1a2e; }
+.browser .chip { position: absolute; right: 22px; bottom: 18px; padding: 6px 12px; border-radius: 999px; background: var(--accent); color: var(--onacc); font-weight: 600; font-size: 14px; }
+.blocks { position: absolute; inset: 10px; display: flex; gap: 4px; }
+.blocks div { display: flex; gap: 4px; flex: 1; min-width: 0; min-height: 0; border-radius: 5px; }
+.blocks .row { flex-direction: row; } .blocks .column { flex-direction: column; }
+.blocks .leaf { background: #3a3658; } .blocks .pages { background: #2a2740; } .blocks .mine { background: var(--accent); }
+
+/* details */
+dialog { width: min(760px, 100% - 24px); max-height: calc(100% - 24px); padding: 0; border: 1px solid var(--line); border-radius: 22px;
+  background: var(--card); color: var(--ink); overflow: auto; }
+dialog::backdrop { background: rgba(8, 8, 18, .6); backdrop-filter: blur(4px); }
+dialog[open] { animation: open .28s var(--ease); }
+@keyframes open { from { opacity: 0; scale: .97; } }
+dialog .shot { aspect-ratio: 16 / 8; }
+dialog .shot > iframe { pointer-events: auto; }
+.close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 36px; height: 36px; border: 0; border-radius: 50%;
+  background: rgba(20, 19, 28, .75); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; }
+.body { padding: 26px 28px 30px; }
+.body h2 { margin: 2px 0 8px; font: 800 clamp(32px, 6vw, 44px)/1 var(--display); font-stretch: 118%; }
+.body > p { margin: 0 0 22px; color: var(--dim); font-size: 18px; max-width: 36em; }
+.install { padding: 16px 18px; border-radius: 14px; background: #14131c; }
+.install p { margin: 0 0 10px; font-size: 15.5px; color: var(--dim); }
+.install p b { color: var(--ink); }
+.cmd { display: flex; align-items: center; gap: 10px; }
+.cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; padding: 9px 12px; border-radius: 9px; background: var(--card); font: 14.5px var(--mono); }
+.btn { height: 38px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--accent); color: var(--onacc); font: 600 15px var(--body); cursor: pointer; }
+.btn.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); text-decoration: none; display: inline-flex; align-items: center; }
+.facts { display: grid; grid-template-columns: 9em 1fr; gap: 12px 18px; margin: 24px 0 0; font-size: 15.5px; }
+.facts dt { color: var(--faint); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.facts ul { margin: 0; padding: 0; list-style: none; }
+.facts code { font: 14px var(--mono); }
+.facts a { color: var(--accent); text-decoration: none; } .facts a:hover { text-decoration: underline; }
+.warn { margin-top: 22px; padding: 12px 16px; border-left: 3px solid var(--warn); border-radius: 0 10px 10px 0; background: color-mix(in srgb, var(--warn) 10%, transparent); font-size: 15px; }
+.warn pre { margin: 8px 0 0; white-space: pre-wrap; font: 13.5px var(--mono); color: var(--dim); }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+
+/* share */
+.share { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; padding: 56px 0; border-top: 1px solid var(--line); }
+.share h2 { margin: 0; font: 800 clamp(34px, 5vw, 52px)/1 var(--display); font-stretch: 125%; }
+.share p { margin: 0 0 14px; color: var(--dim); }
+.share code { font: 15px var(--mono); color: var(--ink); }
+footer { padding: 24px 0 40px; color: var(--faint); font-size: 14px; }
+
+@media (max-width: 700px) {
+  .share { grid-template-columns: 1fr; gap: 18px; }
+  .facts { grid-template-columns: 1fr; gap: 4px; } .facts dd { margin-bottom: 10px; }
+  .body { padding: 22px 20px 24px; }
+  .grid { grid-template-columns: 1fr; }
+  .lede { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="https://cullen-b.github.io/valerie/"><img src="https://cullen-b.github.io/valerie/icon.png" alt="">Valerie</a>
+    <nav><a href="#share">Share yours</a><a href="https://github.com/cullen-b/valerie-plugins">GitHub</a></nav>
+  </header>
+
+  <section class="hero">
+    <h1>Plugins</h1>
+    <p class="lede">Panels, layouts and site tweaks people made for Valerie. Find one here, then install it from <b>Plugins</b> in Valerie's command bar.</p>
+  </section>
+
+  <div class="bar">
+    <label class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input id="q" type="search" placeholder="Search plugins" autocomplete="off" aria-label="Search plugins">
+    </label>
+    <div class="shelves" id="shelves" role="group" aria-label="Show"></div>
+  </div>
+
+  <main>
+    <div class="grid" id="grid" aria-live="polite"></div>
+  </main>
+
+  <section class="share" id="share">
+    <h2>Made one? Share it.</h2>
+    <div>
+      <p>When your AI makes you a plugin, Valerie offers to share it. You can also run <b>Share Plugin</b> in the command bar, or <code>valerie plugins share &lt;name&gt;</code>.</p>
+      <p>Valerie opens a pull request from your GitHub account. Once it's reviewed and merged, it shows up here and in everyone's Plugins window.</p>
+      <p><a href="https://github.com/cullen-b/valerie-plugins#rules-for-plugins">Read the rules for plugins</a></p>
+    </div>
+  </section>
+  <footer>Every file is pinned to the commit it was reviewed at and checksummed, so what you install is what was reviewed.</footer>
+</div>
+
+<dialog id="details" aria-labelledby="d-name"></dialog>
+
+<script>
+const INDEX = "https://raw.githubusercontent.com/cullen-b/valerie-plugins/main/index.json";
+const REPO = "https://github.com/cullen-b/valerie-plugins/tree/main/";
+const SHELVES = [
+  ["all", "All"], ["layout", "Layouts"], ["panel", "Panels"], ["site", "For sites"], ["everywhere", "Everywhere"], ["extension", "Extensions"],
+];
+const KIND = { layout: "Layout", panel: "Panel", site: "For sites", everywhere: "Everywhere", extension: "Browser extension" };
+let items = [], shelf = "all";
+
+const el = (tag, props = {}, ...kids) => {
+  const e = Object.assign(document.createElement(tag), props);
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+};
+const pretty = (name) => name.split("-").map((w) => w === "youtube" ? "YouTube" : w[0].toUpperCase() + w.slice(1)).join(" ");
+const kindOf = (e, top) => top === "layouts" ? "layout" : top === "extensions" ? "extension" : (e.panels || []).length ? "panel" : e.matches.length ? "site" : "everywhere";
+const folder = (e) => ({ layout: "layouts/", extension: "extensions/" }[e.kind] || "plugins/") + e.name;
+const day = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" }) : "";
+
+// A panel runs in a sealed frame with Valerie's colours and a pretend browser of a few tabs.
+const FAKE = `<style>:root{--v-bg:#1c1a2e;--v-fg:#ecebf5;--v-dim:#a9a7c2;--v-accent:#9d8cff}</style><script>
+window.valerie={props:{},state:{pinned:[],kept:[],today:[{id:1,title:"Valerie",url:"https://cullen-b.github.io/valerie/"},{id:2,title:"Plugins",url:"https://cullen-b.github.io/valerie-plugins/"},{id:3,title:"News",url:"https://news.ycombinator.com/"},{id:4,title:"Music",url:"https://music.example/"}],active:2},
+call(){return Promise.resolve(null)},on(n,f){if(n==="state")setTimeout(f,0)},off(){},dragWindow(){}};<\/script>`;
+const panelCache = new Map();
+function panelFrame(e, live) {
+  const f = el("iframe", { title: pretty(e.name) + " preview", loading: "lazy", tabIndex: live ? 0 : -1 });
+  f.setAttribute("sandbox", "allow-scripts");
+  const file = e.files.find((x) => x.path === e.panels[0] + ".html");
+  if (!panelCache.has(file.url)) panelCache.set(file.url, fetch(file.url).then((r) => r.text()));
+  panelCache.get(file.url).then((html) => {
+    f.srcdoc = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => m + FAKE) : FAKE + html;
+  });
+  return f;
+}
+
+function blocks(node) {
+  const d = el("div");
+  const dir = ["row", "column", "stack"].find((k) => node[k]);
+  if (dir) { d.className = dir === "stack" ? "column" : dir; for (const c of node[dir]) d.append(blocks(c)); }
+  else d.className = node.part === "pages" ? "pages" : "leaf mine";
+  if (node.size) d.style.flex = `0 0 ${Math.max(10, node.size / 4)}%`;
+  return d;
+}
+
+function shot(e, live) {
+  const s = el("div", { className: "shot" });
+  if (e.kind === "layout") {
+    if (e.preview) s.append(el("img", { src: e.preview, alt: "" }));
+    else if (e.tree) { const b = el("div", { className: "blocks column" }); b.append(blocks(e.tree)); s.append(b); }
+  } else if (e.kind === "panel") {
+    s.append(panelFrame(e, live));
+  } else {
+    const host = e.kind === "site" ? e.matches[0] : e.kind === "extension" && e.matches[0] ? e.matches[0] : "every site";
+    s.append(el("div", { className: "browser" },
+      el("div", { className: "url" }, host + (e.matches.length > 1 ? ` +${e.matches.length - 1}` : "")),
+      el("div", { className: "page" }),
+      e.commands.length ? el("div", { className: "chip" }, e.commands[0]) : null));
+  }
+  return s;
+}
+
+function card(e) {
+  const b = el("button", { className: "item", type: "button" },
+    shot(e, false),
+    el("div", { className: "meta" },
+      el("span", { className: "kind" }, KIND[e.kind]),
+      el("h2", {}, pretty(e.name)),
+      el("p", {}, e.description),
+      el("span", { className: "by" }, `by ${e.author}`)));
+  b.addEventListener("click", () => open(e));
+  return b;
+}
+
+function fact(dl, label, value) {
+  if (value == null || (Array.isArray(value) && !value.length)) return;
+  dl.append(el("dt", {}, label), el("dd", {}, value));
+}
+const list = (xs, f = (x) => x) => el("ul", {}, ...xs.map((x) => el("li", {}, f(x))));
+
+function open(e) {
+  const d = document.getElementById("details");
+  d.replaceChildren();
+  const cmd = `valerie plugins install ${e.name}`;
+  const copy = el("button", { className: "btn", type: "button" }, "Copy");
+  copy.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(cmd); copy.textContent = "Copied"; } catch { copy.textContent = "Select it"; }
+    setTimeout(() => (copy.textContent = "Copy"), 1600);
+  });
+  const dl = el("dl", { className: "facts" });
+  fact(dl, "Runs on", e.matches.length ? list(e.matches) : e.kind === "site" || e.kind === "everywhere" ? "Every site" : null);
+  fact(dl, "Adds commands", e.commands.length ? list(e.commands) : null);
+  fact(dl, "Panels", (e.panels || []).length ? list(e.panels) : null);
+  fact(dl, "Replaces", (e.replaces || []).length ? list(e.replaces) : null);
+  fact(dl, "Can use", e.permissions.length ? list(e.permissions, (p) => el("code", {}, p)) : null);
+  fact(dl, "Files", list(e.files, (f) => el("a", { href: REPO + folder(e) + "/" + f.path }, f.path)));
+  fact(dl, "Made by", e.author);
+  fact(dl, "Updated", day(e.updated));
+  const close = el("button", { className: "close", type: "button", ariaLabel: "Close" }, "×");
+  close.addEventListener("click", () => d.close());
+  d.append(close, shot(e, true), el("div", { className: "body" },
+    el("span", { className: "kind" }, KIND[e.kind]),
+    el("h2", { id: "d-name" }, pretty(e.name)),
+    el("p", {}, e.description),
+    el("div", { className: "install" },
+      el("p", {}, "In Valerie, open ", el("b", {}, "Plugins"), " from the command bar and search for it. Or from a terminal:"),
+      el("div", { className: "cmd" }, el("code", {}, cmd), copy)),
+    e.programs.length ? el("div", { className: "warn" }, "This runs programs on your computer. Valerie shows you exactly what before you install it:",
+      el("pre", {}, e.programs.join("\n"))) : null,
+    dl,
+    el("div", { className: "links" }, el("a", { className: "btn quiet", href: REPO + folder(e) }, "View the source"))));
+  history.replaceState(null, "", "#" + e.name);
+  d.showModal();
+}
+document.getElementById("details").addEventListener("close", () => history.replaceState(null, "", location.pathname + location.search));
+document.getElementById("details").addEventListener("click", (ev) => { if (ev.target === ev.currentTarget) ev.currentTarget.close(); });
+
+function render() {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const words = q.split(/\s+/).filter(Boolean);
+  const shown = items.filter((e) => (shelf === "all" || e.kind === shelf) &&
+    words.every((w) => [e.name, pretty(e.name), e.description, e.author, KIND[e.kind], ...e.matches, ...e.commands].join(" ").toLowerCase().includes(w)));
+  const grid = document.getElementById("grid");
+  if (shown.length) return grid.replaceChildren(...shown.map(card));
+  const reset = el("button", { className: "btn quiet", type: "button" }, "Show everything");
+  reset.addEventListener("click", () => { document.getElementById("q").value = ""; setShelf("all"); });
+  grid.replaceChildren(el("div", { className: "empty" },
+    el("div", {}, `Nothing matches "${q || KIND[shelf]}" yet. Ask your AI in Valerie to make it, then share it.`), reset));
+}
+
+function setShelf(s) {
+  shelf = s;
+  for (const b of document.querySelectorAll("#shelves button")) b.setAttribute("aria-pressed", b.dataset.shelf === s);
+  render();
+}
+
+function shelves() {
+  const box = document.getElementById("shelves");
+  box.replaceChildren(...SHELVES.filter(([k]) => k === "all" || items.some((e) => e.kind === k)).map(([k, label]) => {
+    const n = k === "all" ? items.length : items.filter((e) => e.kind === k).length;
+    const b = el("button", { type: "button" }, label, el("span", { className: "n" }, String(n)));
+    b.dataset.shelf = k;
+    b.addEventListener("click", () => setShelf(k));
+    return b;
+  }));
+  setShelf(shelf);
+}
+
+document.getElementById("q").addEventListener("input", render);
+
+fetch(INDEX, { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((index) => {
+  for (const top of ["layouts", "plugins", "extensions"]) for (const e of index[top] || []) items.push({ ...e, kind: kindOf(e, top) });
+  items.sort((a, b) => (b.updated || "").localeCompare(a.updated || ""));
+  shelves();
+  const want = items.find((e) => e.name === decodeURIComponent(location.hash.slice(1)));
+  if (want) open(want);
+}).catch(() => {
+  document.getElementById("grid").replaceChildren(el("div", { className: "empty" },
+    "The plugin list didn't load. Check your connection and reload, or browse ", el("a", { href: "https://github.com/cullen-b/valerie-plugins" }, "the repository"), "."));
+});
+</script>
+</body>
+</html>
