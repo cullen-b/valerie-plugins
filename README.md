@@ -3,6 +3,8 @@
 Plugins, panels, layouts and browser extensions people made for [Valerie](https://github.com/cullen-b/valerie), the browser you change
 by asking.
 
+**Browse them:** [cullen-b.github.io/valerie-plugins](https://cullen-b.github.io/valerie-plugins/)
+
 **Install one:** type **Plugins** in Valerie's command bar to browse, search and install. Or from Terminal:
 `valerie plugins search <words>` and `valerie plugins install <name>`.
 
